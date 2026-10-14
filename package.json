@@ -1,0 +1,17 @@
+{
+  "name": "billion-context-pi-pocket-adapter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Run billion-context-pi in Pi Pocket, with compression that survives forks.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/*.test.ts"
+  },
+  "devDependencies": {
+    "billion-context-pi": "0.1.83"
+  }
+}
