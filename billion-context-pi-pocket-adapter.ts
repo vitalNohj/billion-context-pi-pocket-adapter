@@ -304,8 +304,23 @@ type PiTool = {
     name: string;
     description: string;
     parameters: any;
+    annotations?: Record<string, unknown>;
     execute(toolCallId: string, params: unknown, signal: unknown, onUpdate: unknown, ctx: any): Promise<any>;
 };
+
+/**
+ * Tools that only change what the model sees of the conversation, never files, commands, or anything outside it, so
+ * Pocket's plan mode may run them. The delegate tools start subagents and stay blocked there.
+ */
+const CONTEXT_ONLY = new Set(["compress", "decompress", "search_context", "acp_status", "acp_cache"]);
+
+/** The tool's own annotations, marked read-only when it only changes the model's view (Pocket's plan mode reads it). */
+function annotationsOf(tool: PiTool): { annotations?: Record<string, unknown> } {
+    if (!CONTEXT_ONLY.has(tool.name)) {
+        return tool.annotations === undefined ? {} : { annotations: tool.annotations };
+    }
+    return { annotations: { ...tool.annotations, readOnlyHint: true } };
+}
 
 /** A value that survives JSON (Pi Durable stores details as JSON). */
 function json(value: unknown): any {
@@ -445,6 +460,7 @@ export default function createBillionContextPiAdapter(host: Host) {
             name: tool.name,
             description: tool.description,
             parameters: tool.parameters,
+            ...annotationsOf(tool),
             // compress changes saved state: a repeat after a restart must come back as interrupted, not run twice.
             replay: tool.name === "compress" ? "unsafe" : "safe",
             execute: async (args: unknown, toolApi: any, context: any) => {

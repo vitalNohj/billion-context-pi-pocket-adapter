@@ -54,6 +54,10 @@ Sessions compressed before checkpoints existed fall back to billion-context-pi's
 
 Checkpoints are stored in `checkpoints/` inside the state folder, one file per state. They are not deleted automatically.
 
+## Plan mode
+
+Pi Pocket's plan mode blocks tools that are not on its list. The adapter marks `compress`, `decompress`, `search_context`, `acp_status`, and `acp_cache` as read-only (`annotations: { readOnlyHint: true }`), since they change only what the model sees of the conversation. A Pi Pocket that lets read-only tools run in plan mode keeps compression working while Pi plans; an older one blocks them there until the plan is approved. The delegate tools start subagents, so they stay blocked in plan mode.
+
 ## What does not work
 
 Pi Pocket has no terminal UI, so these billion-context-pi features are ignored:

@@ -127,6 +127,25 @@ test("installs billion-context-pi's tools and prompt under the default name", { 
         extension.sections.map((s: any) => s.key),
         ["billion_context"],
     );
+    assert.ok(
+        extension.tools.every((t: any) => t.annotations?.readOnlyHint === true),
+        "its tools only change what the model sees: marked read-only",
+    );
+});
+
+test("compression keeps working in plan mode, where Pi Pocket lets read-only tools run", { skip }, async () => {
+    const { context, newSession, say, owner, modelTexts } = h;
+    if (!readFileSync(join(pocketDir!, "src/server/host.ts"), "utf8").includes("readOnlyTool(")) {
+        return; // A Pi Pocket from before read-only tools in plan mode blocks compress there.
+    }
+    const id = await newSession(app);
+    await app.commands.setPlan(id, owner(app), true);
+    await say(app, id, "read A");
+    await say(app, id, "fold A");
+    const said = (await modelTexts(app, id)).join("\n");
+    assert.doesNotMatch(said, /Plan mode is on: The compress tool/);
+    assert.equal(state(id).blocks.length, 1, "the compress call ran");
+    await app.commands.approvePlan(id, owner(app));
 });
 
 test("forks recover only the compression made before their fork point", { skip }, async () => {
